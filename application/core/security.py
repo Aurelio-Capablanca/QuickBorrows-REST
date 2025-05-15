@@ -4,7 +4,7 @@ import jwt
 from application.core.config import settings
 
 
-pwd_context = CryptContext(schemes=["bycript"], deprecated="auto")
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def hash_password(password:str):
     return pwd_context.hash(password)

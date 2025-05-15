@@ -1,9 +1,7 @@
 from fastapi import FastAPI
-from fastapi import FastAPI
 #from .database import engine, Base
-
-from application.apis.controllers import router as auth_router
+from application.apis.controllers import authentication_routes
 
 app = FastAPI()
 
-app.include_router(auth_router)
+app.include_router(authentication_routes.router)
