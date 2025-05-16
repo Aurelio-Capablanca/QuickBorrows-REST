@@ -4,6 +4,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from application.apis.models.admin_model import Administrators
+from application.apis.schemas.id_schema import IdentifierEntitySchema
 from application.apis.schemas.pageable_schema import PageableSchema
 from application.core.security import hash_password
 
@@ -11,6 +12,14 @@ from application.core.security import hash_password
 def get_admins_by_email(email: str, db: Session):
     return db.query(Administrators).filter(Administrators.adminemail == email).first()
 
+def delete_admin_persistence(identify : IdentifierEntitySchema, db: Session):
+    print("Reach Persistence")
+    admin = db.query(Administrators).filter(Administrators.idadministrator == identify.identity).first()
+    if admin:
+        db.delete(admin)
+        db.commit()
+        return "Admin Deleted"
+    return "Admin Not Deleted"
 
 def create_admins_persistence(admin: Administrators, db: Session):
     try:
@@ -27,7 +36,7 @@ def create_admins_persistence(admin: Administrators, db: Session):
         if not admin_get:
             return ValueError("Admin Not Found")
         admin.datecreated = admin_get.datecreated
-        admin.adminpass = admin.adminpass
+        admin.adminpass = admin_get.adminpass
         db.merge(admin)
         db.commit()
         db.close()
