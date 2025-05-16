@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from application.authentication.schemas import Token, LoginInput
-from application.apis.businesslogic.authactions import authenticate
+from application.apis.businesslogic.auth_actions import authenticate
 from application.database.session import get_db
 from sqlalchemy.orm import Session
 

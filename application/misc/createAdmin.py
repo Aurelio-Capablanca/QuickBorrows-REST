@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from application.database.session import SessionLocal
-from application.apis.models.adminmodel import Administrators
+from application.apis.models.admin_model import Administrators
 from application.core.security import hash_password
 from datetime import datetime
 import sys

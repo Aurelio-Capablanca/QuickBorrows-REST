@@ -1,9 +1,9 @@
 from fastapi import FastAPI
 #from .database import engine, Base
-from application.apis.controllers import authentication_routes
-from application.apis.controllers import testendpoints
+from application.apis.controllers import authentication_controller, test_endpoints, admin_controller
 
 app = FastAPI()
 
-app.include_router(authentication_routes.router)
-app.include_router(testendpoints.router)
+app.include_router(authentication_controller.router)
+app.include_router(test_endpoints.router)
+app.include_router(admin_controller.router)
