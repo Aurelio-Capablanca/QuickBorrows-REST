@@ -13,7 +13,6 @@ def get_admins_by_email(email: str, db: Session):
     return db.query(Administrators).filter(Administrators.adminemail == email).first()
 
 def delete_admin_persistence(identify : IdentifierEntitySchema, db: Session):
-    print("Reach Persistence")
     admin = db.query(Administrators).filter(Administrators.idadministrator == identify.identity).first()
     if admin:
         db.delete(admin)
@@ -29,6 +28,7 @@ def create_admins_persistence(admin: Administrators, db: Session):
             db.add(admin)
             db.commit()
             db.refresh(admin)
+            db.close()
             return "Admin Created"
         admin_get = (db.query(Administrators)
                      .filter(Administrators.idadministrator == admin.idadministrator)
