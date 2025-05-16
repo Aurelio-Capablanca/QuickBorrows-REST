@@ -1,8 +1,7 @@
 from fastapi import HTTPException
-from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from application.apis.services.adminservices import get_admins_by_email
+from application.apis.persistence.adminpersistence import get_admins_by_email
 from application.authentication.schemas import LoginInput
 from application.core.security import verify_password, create_access_token
 
