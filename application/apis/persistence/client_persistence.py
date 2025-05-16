@@ -19,20 +19,20 @@ def get_clients_all_persistence(page: PageableSchema, db: Session):
 
 
 def create_clients_persistence(client: Clients, db: Session):
+    print("Id Client : "+str(client.idclient))
     try:
         if client.idclient is None:
             db.add(client)
             db.commit()
             db.refresh(client)
-            db.close()
+            print("Reach Create")
             return "Client Created"
         client_get = db.query(Clients).filter(Clients.idclient == client.idclient).first()
         if not client_get:
-            return ValueError("Client not Found")
+            raise ValueError("Client not Found")
         db.merge(client)
         db.commit()
-        db.close()
         return "Client Updated"
     except SQLAlchemyError:
         db.rollback()
-        return SQLAlchemyError("Database Operation Failed")
+        raise SQLAlchemyError("Database Operation Failed")

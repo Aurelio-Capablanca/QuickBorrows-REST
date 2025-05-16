@@ -43,12 +43,12 @@ def create_admin_action(admin: Administrators, db: Session):
             detail={"message": create_admins_persistence(admin, db)}
         )
     except ValueError as err:
-        return HTTPException(
+        raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"error": str(err)}
         )
     except SQLAlchemyError as se:
-        return HTTPException(
+        raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"error": "Database failure", "info": str(se)}
         )

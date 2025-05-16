@@ -28,22 +28,20 @@ def create_admins_persistence(admin: Administrators, db: Session):
             db.add(admin)
             db.commit()
             db.refresh(admin)
-            db.close()
             return "Admin Created"
         admin_get = (db.query(Administrators)
                      .filter(Administrators.idadministrator == admin.idadministrator)
                      .first())
         if not admin_get:
-            return ValueError("Admin Not Found")
+            raise ValueError("Admin Not Found")
         admin.datecreated = admin_get.datecreated
         admin.adminpass = admin_get.adminpass
         db.merge(admin)
         db.commit()
-        db.close()
         return "Admin Updated"
     except SQLAlchemyError:
         db.rollback()
-        return SQLAlchemyError("Database operation failed")
+        raise SQLAlchemyError("Database operation failed")
 
 
 def get_admins_all_persistence(db: Session, page : PageableSchema):

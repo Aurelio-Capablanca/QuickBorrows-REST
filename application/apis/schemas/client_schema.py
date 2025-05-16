@@ -2,15 +2,15 @@ from typing import Optional
 from pydantic import BaseModel
 
 
-class Clients(BaseModel):
+class ClientsSchema(BaseModel):
     idclient : Optional[int] = None
-    clientName : str
-    clientLastname : str
-    clientPhone : str
-    clientEmail : str
-    clientAddress : str
-    clientStatus : bool
-    idTypeClient : int
-    idRiskClient : int
-    idGuarantorClient : int
-    isElegible : bool
+    clientname : str
+    clientlastname : str
+    clientphone : str
+    clientemail : str
+    clientaddress : str
+    clientstatus : bool
+    idtypeclient : int
+    idriskclient : int
+    idguarantorclient : Optional[int] = None
+    iselegible : bool
