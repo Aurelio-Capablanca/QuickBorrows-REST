@@ -24,7 +24,6 @@ def get_admins_all_action(db: Session, page: PageableSchema):
 
 def delete_admin_action(identify : IdentifierEntitySchema, db:Session):
     try:
-        print("Reach Action")
         return HTTPException(
             status_code=status.HTTP_200_OK,
             detail={"message": delete_admin_persistence(identify, db)}
