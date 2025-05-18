@@ -20,6 +20,9 @@ def delete_admin_persistence(identify : IdentifierEntitySchema, db: Session):
         return "Admin Deleted"
     return "Admin Not Deleted"
 
+def get_one_admin_persistence(identify : IdentifierEntitySchema, db: Session):
+    return db.query(Administrators).filter(Administrators.idadministrator == identify.identity).first()
+
 def create_admins_persistence(admin: Administrators, db: Session):
     try:
         if admin.idadministrator is None:
@@ -39,9 +42,9 @@ def create_admins_persistence(admin: Administrators, db: Session):
         db.merge(admin)
         db.commit()
         return "Admin Updated"
-    except SQLAlchemyError:
+    except SQLAlchemyError as err:
         db.rollback()
-        raise SQLAlchemyError("Database operation failed")
+        raise SQLAlchemyError("Database operation Failed by :"+err.code)
 
 
 def get_admins_all_persistence(db: Session, page : PageableSchema):

@@ -17,6 +17,8 @@ def delete_clients_persistence(identify: IdentifierEntitySchema, db: Session):
 def get_clients_all_persistence(page: PageableSchema, db: Session):
     return db.query(Clients).offset(page.page).limit(page.limit).all()
 
+def get_one_client_persistence(identify : IdentifierEntitySchema, db: Session):
+    return db.query(Clients).filter(Clients.idclient == identify.identity).first()
 
 def create_clients_persistence(client: Clients, db: Session):
     print("Id Client : "+str(client.idclient))
