@@ -19,12 +19,30 @@ def save_borrow_persistence(borrow: Borrows, db: Session):
             db.refresh(borrow)
             return "Borrow Created"
         borrow_get = (db.query(Borrows).filter(Borrows.idborrow == borrow.idborrow).first())
-        if not borrow_get :
+        if not borrow_get:
             raise ValueError("Borrow Not found")
         borrow.datetaken = borrow_get.datetaken
-        #if borrow tax is changed perform a payment plan recalc
+        # if borrow tax is changed perform a payment plan recalculation
         db.commit()
         return "Borrow Updated"
     except SQLAlchemyError as err:
         db.rollback()
-        raise SQLAlchemyError("Database Operation Failed by :"+err.code)
+        raise SQLAlchemyError("Database Operation Failed by :" + err.code)
+
+
+def get_all_borrows_persistence(page: PageableSchema, db: Session):
+    return db.query(Borrows).offset(page.page).limit(page.limit).all()
+
+
+def get_one_borrow_persistence(identify: IdentifierEntitySchema, db: Session):
+    return db.query(Borrows).filter(Borrows.idborrow == identify.identity).first()
+
+
+def delete_borrow_persistence(identify: IdentifierEntitySchema, db: Session):
+    borrow = db.query(Borrows).filter(Borrows.idborrow == identify.identity).first()
+    ## Here you also have to delete the values from Payment Plans!
+    if borrow:
+        db.delete(borrow)
+        db.commit()
+        return "Borrow Deleted!"
+    return "Borrow Not Deleted!"
