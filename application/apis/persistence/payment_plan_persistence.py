@@ -6,18 +6,20 @@ from application.apis.schemas.id_schema import IdentifierEntitySchema
 
 
 def save_payment_plan_persistence(plan: PaymentPlan, db: Session):
-    try:
-        if plan.idplan is None:
-            db.add(plan)
-            db.commit()
+    if plan.idplan is None:
+        db.add(plan)
+        # db.commit()
+        try:
+            db.flush()
             db.refresh(plan)
-            return {"entity": plan, "message": "Plan Updated"}
-        db.merge(plan)
-        db.commit()
+        except SQLAlchemyError as e:
+            db.rollback()
+            raise Exception("Database error during borrow creation: " + str(e))
         return {"entity": plan, "message": "Plan Updated"}
-    except SQLAlchemyError as err:
-        db.rollback()
-        raise SQLAlchemyError("Database Operation Failed by : " + str(err))
+    db.merge(plan)
+    # db.commit()
+    db.flush()
+    return {"entity": plan, "message": "Plan Updated"}
 
 
 def see_payment_plan_by_borrow(id_borrow: IdentifierEntitySchema, db: Session):

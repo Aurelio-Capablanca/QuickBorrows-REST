@@ -22,34 +22,34 @@ def save_borrow_actions(request: BorrowRequest, db: Session):
     try:
         borrow = Borrows(**request.borrow.model_dump())
         bill_conditions = request.billconditions
-        with Session(engine) as session:
-            try:
-                borrows = save_borrow_persistence(borrow, db)
-                borrow_entity = borrows["entity"]
-                borrow_message = borrows["message"]
-                is_update = borrows["isUpdate"]
-                perform = borrows["perform"]
-                plan = str
-                bill = str
-                if not is_update or perform:
-                    plan = save_payment_plan_persistence(
-                        PaymentPlan(duedateplan=borrow_entity.duedate, idborrow=borrow_entity.idborrow), db)
-                    plan_entity = plan["entity"]
-                    if perform:
-                        delete_issued_bills(plan_entity.idplan, db)
-                    bills = calculate_payment_plan(borrow_entity.totalpayment, bill_conditions.numpayments,
-                                                   bill_conditions.paymentsof, bill_conditions.generatetofill,
-                                                   plan_entity.idplan, borrow_entity.duedate)
-                    bill = create_issued_bills(bills, db)
-                message = borrow_message, " ", plan, " ", bill
-                session.commit()
-                return HTTPException(
-                    status_code=status.HTTP_200_OK,
-                    detail={"message": "Success", "data": message}
-                )
-            except Exception:
-                session.rollback()
-                raise
+        try:
+            borrows = save_borrow_persistence(borrow, db)
+            borrow_entity = borrows["entity"]
+            borrow_message = borrows["message"]
+            is_update = borrows["isUpdate"]
+            perform = borrows["perform"]
+            plan = str
+            bill = str
+            if not is_update or perform:
+                plan = save_payment_plan_persistence(
+                    PaymentPlan(duedateplan=borrow_entity.duedate, idborrow=borrow_entity.idborrow), db)
+                plan_entity = plan["entity"]
+                if perform:
+                    delete_issued_bills(plan_entity.idplan, db)
+                bills = calculate_payment_plan(borrow_entity.totalpayment, bill_conditions.numpayments,
+                                               bill_conditions.paymentsof, bill_conditions.generatetofill,
+                                               plan_entity.idplan, borrow_entity.duedate)
+                bill = create_issued_bills(bills, db)
+            message = borrow_message, " And ", plan["message"], " And ", bill
+            #session.commit()
+            db.commit()
+            return HTTPException(
+                status_code=status.HTTP_200_OK,
+                detail={"message": "Success", "data": message}
+            )
+        except Exception:
+            db.rollback()
+            raise
     except ValueError as err:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail={"message": str(err)})

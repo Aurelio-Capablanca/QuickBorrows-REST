@@ -9,34 +9,36 @@ from application.apis.schemas.pageable_schema import PageableSchema
 
 
 def save_borrow_persistence(borrow: Borrows, db: Session):
-    try:
-        if borrow.idborrow is None:
-            borrow.datetaken = datetime.now(timezone.utc)
-            if borrow.percentagetax is None:
-                borrow.percentagetax = 10.0
-                borrow.totalpayment = borrow.borrowamount + ((borrow.borrowamount * borrow.percentagetax) / 100)
-            db.add(borrow)
-            db.commit()
+    if borrow.idborrow is None:
+        borrow.datetaken = datetime.now(timezone.utc)
+        if borrow.percentagetax is None:
+            borrow.percentagetax = 10.0
+            borrow.totalpayment = borrow.borrowamount + ((borrow.borrowamount * borrow.percentagetax) / 100)
+        db.add(borrow)
+        # db.commit()
+        try:
+            db.flush()
             db.refresh(borrow)
-            return {"entity": borrow, "isUpdate": False, "perform": False, "message": "Borrow Created"}
-        borrow_get = (db.query(Borrows).filter(Borrows.idborrow == borrow.idborrow).first())
-        if not borrow_get:
-            raise ValueError("Borrow Not found")
+        except SQLAlchemyError as e:
+            db.rollback()
+            raise Exception("Database error during borrow creation: " + str(e))
+        return {"entity": borrow, "isUpdate": False, "perform": False, "message": "Borrow Created"}
+    borrow_get = (db.query(Borrows).filter(Borrows.idborrow == borrow.idborrow).first())
+    if not borrow_get:
+        raise ValueError("Borrow Not found")
+    perform_other_actions = False
+    if borrow.percentagetax is not borrow_get.percentagetax or borrow.borrowamount is not borrow_get.borrowamount:
+        perform_other_actions = True
+        borrow.totalpayment = borrow_get.borrowamount + ((borrow_get.borrowamount * borrow_get.percentagetax) / 100)
+    else:
         perform_other_actions = False
-        if borrow.percentagetax is not borrow_get.percentagetax or borrow.borrowamount is not borrow_get.borrowamount:
-            perform_other_actions = True
-            borrow.totalpayment = borrow_get.borrowamount + ((borrow_get.borrowamount * borrow_get.percentagetax) / 100)
-        else:
-            perform_other_actions = False
-            borrow.totalpayment = borrow_get.totalpayment
-        borrow.datetaken = borrow_get.datetaken
-        merge = db.merge(borrow)
-        db.refresh(merge)
-        db.commit()
-        return {"entity": merge, "isUpdate": True, "perform": perform_other_actions, "message": "Borrow Updated"}
-    except SQLAlchemyError as err:
-        db.rollback()
-        raise SQLAlchemyError("Database Operation Failed by :" + str(err))
+        borrow.totalpayment = borrow_get.totalpayment
+    borrow.datetaken = borrow_get.datetaken
+    merge = db.merge(borrow)
+    db.refresh(merge)
+    db.flush()
+    # db.commit()
+    return {"entity": merge, "isUpdate": True, "perform": perform_other_actions, "message": "Borrow Updated"}
 
 
 def get_all_borrows_persistence(page: PageableSchema, db: Session):

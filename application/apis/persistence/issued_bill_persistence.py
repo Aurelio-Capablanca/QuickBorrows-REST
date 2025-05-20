@@ -10,10 +10,14 @@ from application.apis.schemas.id_schema import IdentifierEntitySchema
 def create_issued_bills(bills: list[IssuedBill], db: Session):
     try:
         db.add_all(bills)
+        db.flush()
+        for bill in bills:
+            db.refresh(bill)
         db.commit()
-        return "Bills Created!"
-    except SQLAlchemyError as err:
-        raise SQLAlchemyError("Database Error: " + str(err))
+    except SQLAlchemyError as e:
+        db.rollback()
+        raise Exception("Database error during borrow creation: " + str(e))
+    return "Bills Created!"
 
 
 async def get_all_bills_by_borrow_(id_borrow: IdentifierEntitySchema, db: Session):
@@ -27,7 +31,8 @@ async def get_all_bills_by_borrow_(id_borrow: IdentifierEntitySchema, db: Sessio
     bills = result.scalar_one_or_none()
     return bills
 
-async def delete_issued_bills(id_plan : int, db: Session):
+
+async def delete_issued_bills(id_plan: int, db: Session):
     statement = delete(IssuedBill).where(IssuedBill.idplan == id_plan)
     await db.execute(statement)
     await db.commit()
