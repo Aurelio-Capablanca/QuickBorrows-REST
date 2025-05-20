@@ -13,3 +13,6 @@ class IssuedBill(Base):
     duedate = Column(DateTime)
     amounttopay = Column(Double)
     idplan = Column(Integer)
+
+    def __str__(self):
+        return f"Bill #{self.idbill}: Due {self.duedate}, Pay ${self.amounttopay}, Plan {self.idplan}"
