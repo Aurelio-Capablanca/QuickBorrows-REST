@@ -9,62 +9,67 @@ def calculate_payment_plan(total: float, initial_times: list[int], aim_to_pay: l
                            id_plan_origin: int,
                            initial_date: datetime):
     bill_issues = []
-    if not generate_to_fill and len(initial_times) == 1 and len(aim_to_pay) == 0:  # pay by full set of times
+
+    ## CASE 1:  pay by full set of times
+    if not generate_to_fill and len(initial_times) == 1 and len(aim_to_pay) == 0:
         bill_times = initial_times[0]
         bill_pay = round(total / bill_times, 2)
         for index in range(bill_times):
             bill_issues.append(IssuedBill(amounttopay=bill_pay, duedate=initial_date + relativedelta(months=index),
                                           idplan=id_plan_origin))
         return bill_issues
-    if generate_to_fill == True and aim_to_pay is not None:  # pay by stated initial Bill
-        bill_set = int(total / aim_to_pay[0])
-        initial_amount = bill_set * aim_to_pay[0]
+
+    ## CASE 2:  pay by stated initial Bill
+    if generate_to_fill == True and aim_to_pay is not None:
+        agreed_amount = aim_to_pay[0]
+        bill_set = int(total / agreed_amount)
         for i in range(bill_set):
-            bill_issues.append(IssuedBill(amounttopay=aim_to_pay[0], duedate=initial_date + relativedelta(months=i),
+            bill_issues.append(IssuedBill(amounttopay=agreed_amount, duedate=initial_date + relativedelta(months=i),
                                           idplan=id_plan_origin))
-        final_payment = total - initial_amount
-        bill_issues.append(
-            IssuedBill(amounttopay=final_payment, duedate=initial_date + relativedelta(months=bill_set + 1),
-                       idplan=id_plan_origin))
+        initial_amount = bill_set * agreed_amount
+        final_payment = round(total - (agreed_amount * bill_set), 2)
+        if final_payment > 0:
+            bill_issues.append(
+                IssuedBill(amounttopay=final_payment, duedate=initial_date + relativedelta(months=bill_set),
+                           idplan=id_plan_origin))
         return bill_issues
-    ## Single Element Lists
-    ## Multiple Elements List
-    if len(initial_times) > 0 and len(aim_to_pay) > 0:  ## Pay by appoint but with rightful intervention
-        accumulated_payment = [0]
-        set_to_fix = []
-        for index, value in enumerate(aim_to_pay):
-            accumulated_payment[0] += aim_to_pay[index] * initial_times[index]
-            if accumulated_payment[0] < total:  ## Everything is Still Correct
-                for indexOne in range(initial_times[index]):
-                    bill_issues.append(
-                        IssuedBill(amounttopay=aim_to_pay[0], duedate=initial_date + relativedelta(months=indexOne),
-                                   idplan=id_plan_origin))
-            else:
-                remove_from_payment = round(accumulated_payment[0] - total, 2)
-                ## fix if the remnant is too big to cut the previous payment if needed
-                for iTwo in range(initial_times[index]):
-                    set_to_fix.append(aim_to_pay[index])
-                    bill_issues.append(IssuedBill(amounttopay=set_to_fix[0],
-                                                  duedate=initial_date + relativedelta(months=initial_times[index]),
-                                                  idplan=id_plan_origin))
-                final_fix = round(set_to_fix[len(set_to_fix) - 1] - remove_from_payment, 2)
-                bill_issues[len(bill_issues) - 1].amounttopay = final_fix
+
+    ##CASE 3 : Pay by appoint but with rightful intervention
+    if len(initial_times) == len(aim_to_pay):
+        current_month = 0
+        total_paid = 0.0
+        for i in range(len(initial_times)):
+            pay_count = initial_times[i]
+            pay_amount = aim_to_pay[i]
+            for j in range(pay_count):
+                due = initial_date + relativedelta(months=current_month)
+                current_month += 1
+                # If adding this bill would exceed the total, cap it
+                if round(total_paid + pay_amount, 2) >= total:
+                    pay_amount = round(total - total_paid, 2)
+                    if pay_amount <= 0:
+                        break
+                    bill_issues.append(IssuedBill(amounttopay=pay_amount, duedate=due, idplan=id_plan_origin))
+                    return bill_issues
+
+                bill_issues.append(IssuedBill(amounttopay=pay_amount, duedate=due, idplan=id_plan_origin))
+                total_paid += pay_amount
         return bill_issues
-    ## Multiple Elements List
+
     return bill_issues
 
 
 if __name__ == "__main__":
     first_case = calculate_payment_plan(1650, [5], [], False, 0, datetime.now(timezone.utc))
     second_case = calculate_payment_plan(1650, [10], [100], True, 0, datetime.now(timezone.utc))
-    third_case = calculate_payment_plan(1650, [10, 3], [100, 216.67], False, 0, datetime.now(timezone.utc))
+    third_case = calculate_payment_plan(1968, [10, 3], [100, 516.67], False, 0, datetime.now(timezone.utc))
     print("****************************************************************")
-    for i, val in enumerate(first_case):
-        print(first_case[i])
+    for a, val in enumerate(first_case):
+        print(first_case[a])
     print("****************************************************************")
-    for i, val in enumerate(second_case):
-        print(second_case[i])
+    for a, val in enumerate(second_case):
+        print(second_case[a])
     print("****************************************************************")
-    for i, val in enumerate(third_case):
-        print(third_case[i])
+    for a, val in enumerate(third_case):
+        print((a + 1), " - ", third_case[a])
     print("****************************************************************")

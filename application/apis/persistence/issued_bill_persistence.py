@@ -34,5 +34,9 @@ async def get_all_bills_by_borrow_(id_borrow: IdentifierEntitySchema, db: Sessio
 
 async def delete_issued_bills(id_plan: int, db: Session):
     statement = delete(IssuedBill).where(IssuedBill.idplan == id_plan)
-    await db.execute(statement)
-    await db.commit()
+    try:
+        db.execute(statement)
+        db.flush()
+    except SQLAlchemyError as e:
+        db.rollback()
+        raise Exception("Database error during issued bills deletion: " + str(e))

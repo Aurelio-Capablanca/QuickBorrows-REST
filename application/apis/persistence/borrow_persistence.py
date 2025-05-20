@@ -34,10 +34,13 @@ def save_borrow_persistence(borrow: Borrows, db: Session):
         perform_other_actions = False
         borrow.totalpayment = borrow_get.totalpayment
     borrow.datetaken = borrow_get.datetaken
-    merge = db.merge(borrow)
-    db.refresh(merge)
-    db.flush()
-    # db.commit()
+    merge = None
+    try:
+        db.merge(merge)
+        db.flush()
+    except SQLAlchemyError as e:
+        db.rollback()
+        raise Exception("Database error during borrow update: " + str(e))
     return {"entity": merge, "isUpdate": True, "perform": perform_other_actions, "message": "Borrow Updated"}
 
 

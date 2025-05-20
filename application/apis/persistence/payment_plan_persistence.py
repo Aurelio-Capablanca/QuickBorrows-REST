@@ -16,9 +16,15 @@ def save_payment_plan_persistence(plan: PaymentPlan, db: Session):
             db.rollback()
             raise Exception("Database error during borrow creation: " + str(e))
         return {"entity": plan, "message": "Plan Updated"}
-    db.merge(plan)
-    # db.commit()
-    db.flush()
+    # db.merge(plan)
+    # # db.commit()
+    # db.flush()
+    try:
+        db.merge(plan)
+        db.flush()
+    except SQLAlchemyError as e:
+        db.rollback()
+        raise Exception("Database error during payment plan update: " + str(e))
     return {"entity": plan, "message": "Plan Updated"}
 
 
