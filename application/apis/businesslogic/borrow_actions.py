@@ -11,14 +11,22 @@ from application.apis.schemas.pageable_schema import PageableSchema
 from application.apis.persistence.borrow_persistence import get_all_borrows_persistence, get_one_borrow_persistence, \
     delete_borrow_persistence, save_borrow_persistence
 from application.apis.businesslogic.abstraction.payment_plan_calculations import  calculate_payment_plan
+from application.database.session import engine
 
 
 def save_borrow_actions(borrow: Borrows, db: Session):
     try:
-        borrows = save_borrow_persistence(borrow, db)
 
-        ## Missing Payment Plan and Bills issue (call payment plan calculations)
-        #calculate_payment_plan(1650, [10, 3], [100, 216.67], False, 0, datetime.now(timezone.utc))
+        with Session(engine) as session:
+            try:
+                borrows = save_borrow_persistence(borrow, db)
+                ## Missing Payment Plan and Bills issue (call payment plan calculations)
+                # calculate_payment_plan(1650, [10, 3], [100, 216.67], False, 0, datetime.now(timezone.utc))
+
+                session.commit()
+            except Exception:
+                session.rollback()
+                raise
     except ValueError as err:
         HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                       detail={"message": str(err)})
