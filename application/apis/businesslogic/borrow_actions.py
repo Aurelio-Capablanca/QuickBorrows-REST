@@ -7,41 +7,55 @@ from starlette import status
 
 from application.apis.models.borrow_model import Borrows
 from application.apis.models.payment_plan_model import PaymentPlan
+from application.apis.schemas.borrow_schema import BorrowRequest
 from application.apis.schemas.id_schema import IdentifierEntitySchema
 from application.apis.schemas.pageable_schema import PageableSchema
 from application.apis.persistence.borrow_persistence import get_all_borrows_persistence, get_one_borrow_persistence, \
     delete_borrow_persistence, save_borrow_persistence
-from application.apis.businesslogic.abstraction.payment_plan_calculations import  calculate_payment_plan
+from application.apis.businesslogic.abstraction.payment_plan_calculations import calculate_payment_plan
 from application.database.session import engine
 from application.apis.persistence.payment_plan_persistence import save_payment_plan_persistence
-from application.apis.persistence.issued_bill_persistence import create_issued_bills
+from application.apis.persistence.issued_bill_persistence import create_issued_bills, delete_issued_bills
 
-def save_borrow_actions(borrow: Borrows, db: Session):
+
+def save_borrow_actions(request: BorrowRequest, db: Session):
     try:
-
+        borrow = Borrows(**request.borrow.model_dump())
+        bill_conditions = request.billconditions
         with Session(engine) as session:
             try:
                 borrows = save_borrow_persistence(borrow, db)
+                borrow_entity = borrows["entity"]
+                borrow_message = borrows["message"]
                 is_update = borrows["isUpdate"]
                 perform = borrows["perform"]
-                ## Missing Payment Plan and Bills issue (call payment plan calculations)
                 plan = str
                 bill = str
-                if perform:
-                    plan = save_payment_plan_persistence(PaymentPlan(duedateplan=borrows.duedate, idborrow=borrows.idborrow), db)
-                    bills = calculate_payment_plan(borrows.totalpayment, [10, 3], [100, 216.67], False, plan["entity"].idplan, borrows.duedate)
+                if not is_update or perform:
+                    plan = save_payment_plan_persistence(
+                        PaymentPlan(duedateplan=borrow_entity.duedate, idborrow=borrow_entity.idborrow), db)
+                    plan_entity = plan["entity"]
+                    if perform:
+                        delete_issued_bills(plan_entity.idplan, db)
+                    bills = calculate_payment_plan(borrow_entity.totalpayment, bill_conditions.numpayments,
+                                                   bill_conditions.paymentsof, bill_conditions.generatetofill,
+                                                   plan_entity.idplan, borrow_entity.duedate)
                     bill = create_issued_bills(bills, db)
-
+                message = borrow_message, " ", plan, " ", bill
                 session.commit()
+                return HTTPException(
+                    status_code=status.HTTP_200_OK,
+                    detail={"message": "Success", "data": message}
+                )
             except Exception:
                 session.rollback()
                 raise
     except ValueError as err:
-        HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                      detail={"message": str(err)})
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail={"message": str(err)})
     except SQLAlchemyError as err:
-        HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                      detail={"message": concat("Database Failure",str(err))})
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail={"message": concat("Database Failure", str(err))})
 
 
 def get_all_borrows_actions(page: PageableSchema, db: Session):

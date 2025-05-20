@@ -5,7 +5,7 @@ from dateutil.relativedelta import relativedelta
 from application.apis.models.issued_bill_model import IssuedBill
 
 
-def calculate_payment_plan(total: float, initial_times: list, aim_to_pay: list, generate_to_fill: bool,
+def calculate_payment_plan(total: float, initial_times: list[int], aim_to_pay: list[float], generate_to_fill: bool,
                            id_plan_origin: int,
                            initial_date: datetime):
     bill_issues = []

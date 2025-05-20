@@ -18,7 +18,7 @@ def save_borrow_persistence(borrow: Borrows, db: Session):
             db.add(borrow)
             db.commit()
             db.refresh(borrow)
-            return {"isUpdate": False, "perform": False, "message": "Borrow Created"}
+            return {"entity": borrow, "isUpdate": False, "perform": False, "message": "Borrow Created"}
         borrow_get = (db.query(Borrows).filter(Borrows.idborrow == borrow.idborrow).first())
         if not borrow_get:
             raise ValueError("Borrow Not found")
@@ -30,9 +30,10 @@ def save_borrow_persistence(borrow: Borrows, db: Session):
             perform_other_actions = False
             borrow.totalpayment = borrow_get.totalpayment
         borrow.datetaken = borrow_get.datetaken
-        db.merge(borrow)
+        merge = db.merge(borrow)
+        db.refresh(merge)
         db.commit()
-        return {"isUpdate": True, "perform": perform_other_actions, "message": "Borrow Updated"}
+        return {"entity": merge, "isUpdate": True, "perform": perform_other_actions, "message": "Borrow Updated"}
     except SQLAlchemyError as err:
         db.rollback()
         raise SQLAlchemyError("Database Operation Failed by :" + err.code)
