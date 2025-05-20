@@ -26,7 +26,6 @@ def calculate_payment_plan(total: float, initial_times: list[int], aim_to_pay: l
         for i in range(bill_set):
             bill_issues.append(IssuedBill(amounttopay=agreed_amount, duedate=initial_date + relativedelta(months=i),
                                           idplan=id_plan_origin))
-        initial_amount = bill_set * agreed_amount
         final_payment = round(total - (agreed_amount * bill_set), 2)
         if final_payment > 0:
             bill_issues.append(
@@ -44,14 +43,12 @@ def calculate_payment_plan(total: float, initial_times: list[int], aim_to_pay: l
             for j in range(pay_count):
                 due = initial_date + relativedelta(months=current_month)
                 current_month += 1
-                # If adding this bill would exceed the total, cap it
                 if round(total_paid + pay_amount, 2) >= total:
                     pay_amount = round(total - total_paid, 2)
                     if pay_amount <= 0:
                         break
                     bill_issues.append(IssuedBill(amounttopay=pay_amount, duedate=due, idplan=id_plan_origin))
                     return bill_issues
-
                 bill_issues.append(IssuedBill(amounttopay=pay_amount, duedate=due, idplan=id_plan_origin))
                 total_paid += pay_amount
         return bill_issues
@@ -61,7 +58,7 @@ def calculate_payment_plan(total: float, initial_times: list[int], aim_to_pay: l
 
 if __name__ == "__main__":
     first_case = calculate_payment_plan(1650, [5], [], False, 0, datetime.now(timezone.utc))
-    second_case = calculate_payment_plan(1650, [10], [100], True, 0, datetime.now(timezone.utc))
+    second_case = calculate_payment_plan(1968, [10], [100], True, 0, datetime.now(timezone.utc))
     third_case = calculate_payment_plan(1968, [10, 3], [100, 516.67], False, 0, datetime.now(timezone.utc))
     print("****************************************************************")
     for a, val in enumerate(first_case):
