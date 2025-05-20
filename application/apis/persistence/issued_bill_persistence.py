@@ -1,8 +1,7 @@
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, selectinload
 
-from application.apis.models.borrow_model import Borrows
 from application.apis.models.payment_plan_model import PaymentPlan
 from application.apis.models.issued_bill_model import IssuedBill
 from application.apis.schemas.id_schema import IdentifierEntitySchema
@@ -12,6 +11,7 @@ def create_issued_bills(bills: list[IssuedBill], db: Session):
     try:
         db.add_all(bills)
         db.commit()
+        return "Bills Created!"
     except SQLAlchemyError as err:
         raise SQLAlchemyError("Database Error: " + err.code)
 
@@ -27,4 +27,7 @@ async def get_all_bills_by_borrow_(id_borrow: IdentifierEntitySchema, db: Sessio
     bills = result.scalar_one_or_none()
     return bills
 
-# def delete_issued_bills(bills: list[IssuedBill], db: Session):
+async def delete_issued_bills(id_plan : int, db: Session):
+    statement = delete(IssuedBill).where(IssuedBill.idplan == id_plan)
+    await db.execute(statement)
+    await db.commit()

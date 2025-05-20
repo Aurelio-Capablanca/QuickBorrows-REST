@@ -11,8 +11,10 @@ def save_payment_plan_persistence(plan: PaymentPlan, db: Session):
             db.add(plan)
             db.commit()
             db.refresh(plan)
+            return {"entity": plan, "message": "Plan Updated"}
         db.merge(plan)
         db.commit()
+        return {"entity": plan, "message": "Plan Updated"}
     except SQLAlchemyError as err:
         db.rollback()
         raise SQLAlchemyError("Database Operation Failed by : " + err.code)
