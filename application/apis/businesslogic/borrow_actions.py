@@ -28,6 +28,7 @@ def save_borrow_actions(request: BorrowRequest, db: Session):
             borrow_message = borrows["message"]
             is_update = borrows["isUpdate"]
             perform = borrows["perform"]
+            print("is about to perform ? ",perform)
             plan = str
             bill = str
             if not is_update or perform:

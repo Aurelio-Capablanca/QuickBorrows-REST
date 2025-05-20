@@ -34,7 +34,7 @@ def save_borrow_persistence(borrow: Borrows, db: Session):
         perform_other_actions = False
         borrow.totalpayment = borrow_get.totalpayment
     borrow.datetaken = borrow_get.datetaken
-    merge = None
+    merge = borrow
     try:
         db.merge(merge)
         db.flush()

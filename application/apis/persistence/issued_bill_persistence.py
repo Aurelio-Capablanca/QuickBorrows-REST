@@ -20,19 +20,19 @@ def create_issued_bills(bills: list[IssuedBill], db: Session):
     return "Bills Created!"
 
 
-async def get_all_bills_by_borrow_(id_borrow: IdentifierEntitySchema, db: Session):
+def get_all_bills_by_borrow_(id_borrow: IdentifierEntitySchema, db: Session):
     join_tables = (select(IssuedBill)
                    .join(IssuedBill.idplan)
                    .join(PaymentPlan.idborrow)
                    .options(selectinload(IssuedBill.idplan).selectinload(PaymentPlan.idborrow))
                    .where(PaymentPlan.idborrow == id_borrow.identity)
                    )
-    result = await db.execute(join_tables)
+    result = db.execute(join_tables)
     bills = result.scalar_one_or_none()
     return bills
 
 
-async def delete_issued_bills(id_plan: int, db: Session):
+def delete_issued_bills(id_plan: int, db: Session):
     statement = delete(IssuedBill).where(IssuedBill.idplan == id_plan)
     try:
         db.execute(statement)

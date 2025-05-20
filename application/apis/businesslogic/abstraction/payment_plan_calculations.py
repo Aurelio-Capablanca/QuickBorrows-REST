@@ -52,7 +52,6 @@ def calculate_payment_plan(total: float, initial_times: list[int], aim_to_pay: l
                 bill_issues.append(IssuedBill(amounttopay=pay_amount, duedate=due, idplan=id_plan_origin))
                 total_paid += pay_amount
         return bill_issues
-
     return bill_issues
 
 
