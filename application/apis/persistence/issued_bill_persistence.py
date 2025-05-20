@@ -13,7 +13,7 @@ def create_issued_bills(bills: list[IssuedBill], db: Session):
         db.commit()
         return "Bills Created!"
     except SQLAlchemyError as err:
-        raise SQLAlchemyError("Database Error: " + err.code)
+        raise SQLAlchemyError("Database Error: " + str(err))
 
 
 async def get_all_bills_by_borrow_(id_borrow: IdentifierEntitySchema, db: Session):

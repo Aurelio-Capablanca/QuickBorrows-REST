@@ -17,7 +17,7 @@ def save_payment_plan_persistence(plan: PaymentPlan, db: Session):
         return {"entity": plan, "message": "Plan Updated"}
     except SQLAlchemyError as err:
         db.rollback()
-        raise SQLAlchemyError("Database Operation Failed by : " + err.code)
+        raise SQLAlchemyError("Database Operation Failed by : " + str(err))
 
 
 def see_payment_plan_by_borrow(id_borrow: IdentifierEntitySchema, db: Session):
