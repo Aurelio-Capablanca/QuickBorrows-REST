@@ -12,7 +12,8 @@ from application.apis.schemas.pageable_schema import PageableSchema
 from application.apis.persistence.borrow_persistence import get_all_borrows_persistence, get_one_borrow_persistence, \
     delete_borrow_persistence, save_borrow_persistence, change_due_date_borrow_persistence
 from application.apis.businesslogic.abstraction.payment_plan_calculations import calculate_issued_bill
-from application.apis.persistence.issued_bill_persistence import create_issued_bills, delete_issued_bills
+from application.apis.persistence.issued_bill_persistence import create_issued_bills, delete_issued_bills, \
+    get_all_bills_by_borrow
 
 
 def save_borrow_actions(request: BorrowRequest, db: Session):
@@ -53,7 +54,7 @@ def save_borrow_actions(request: BorrowRequest, db: Session):
 
 def get_all_borrows_actions(page: PageableSchema, db: Session):
     try:
-        HTTPException(
+        return HTTPException(
             status_code=status.HTTP_200_OK,
             detail={"message": "Success", "data": get_all_borrows_persistence(page, db)}
         )
@@ -66,7 +67,7 @@ def get_all_borrows_actions(page: PageableSchema, db: Session):
 
 def get_one_borrow_action(identify: IdentifierEntitySchema, db: Session):
     try:
-        HTTPException(
+        return HTTPException(
             status_code=status.HTTP_200_OK,
             detail={"message": "Success", "data": get_one_borrow_persistence(identify, db)}
         )
@@ -79,9 +80,21 @@ def get_one_borrow_action(identify: IdentifierEntitySchema, db: Session):
 
 def delete_borrow_action(identify: IdentifierEntitySchema, db: Session):
     try:
-        HTTPException(
+        return HTTPException(
             status_code=status.HTTP_200_OK,
             detail={"message": "Success", "data": delete_borrow_persistence(identify, db)}
+        )
+    except SQLAlchemyError as err:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"error": "Database failure", "info": str(err)}
+        )
+
+def see_all_bills(identify: IdentifierEntitySchema, db: Session):
+    try:
+        return HTTPException(
+            status_code=status.HTTP_200_OK,
+            detail={"message": "Success", "data": get_all_bills_by_borrow(identify, db)}
         )
     except SQLAlchemyError as err:
         raise HTTPException(

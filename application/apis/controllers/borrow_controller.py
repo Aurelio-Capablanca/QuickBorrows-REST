@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from application.apis.businesslogic.borrow_actions import save_borrow_actions, get_all_borrows_actions, \
-    get_one_borrow_action, delete_borrow_action
+    get_one_borrow_action, delete_borrow_action, see_all_bills
 from application.apis.schemas.borrow_schema import BorrowRequest
 from application.apis.schemas.id_schema import IdentifierEntitySchema
 from application.apis.schemas.pageable_schema import PageableSchema
@@ -34,3 +34,9 @@ def get_one_borrow_controller(identifier: IdentifierEntitySchema, db: Session = 
 def delete_borrow_controller(identifier: IdentifierEntitySchema, db: Session = Depends(get_db),
                               current_user=Depends(get_current_user)):
     return delete_borrow_action(identifier, db)
+
+
+@router.post("/api/borrows/see-all-bills")
+def delete_borrow_controller(identifier: IdentifierEntitySchema, db: Session = Depends(get_db),
+                              current_user=Depends(get_current_user)):
+    return see_all_bills(identifier, db)

@@ -20,15 +20,8 @@ def create_issued_bills(bills: list[IssuedBill], db: Session):
     return "Bills Created!"
 
 
-def get_all_bills_by_borrow_(id_borrow: IdentifierEntitySchema, db: Session):
-    stmt = (
-        select(IssuedBill)
-        .where(IssuedBill.idborrow == id_borrow.identity)
-        .options(selectinload(IssuedBill.idborrow))  # optional
-    )
-    result = db.execute(stmt)
-    bills = result.scalars().all()
-    return bills
+def get_all_bills_by_borrow(id_borrow: IdentifierEntitySchema, db: Session):
+    return db.query(IssuedBill).filter(IssuedBill.idborrow == id_borrow.identity).all()
 
 
 def delete_issued_bills(id_borrow: int, db: Session):
