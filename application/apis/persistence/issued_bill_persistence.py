@@ -21,13 +21,13 @@ def create_issued_bills(bills: list[IssuedBill], db: Session):
 
 
 def get_all_bills_by_borrow_(id_borrow: IdentifierEntitySchema, db: Session):
-    join_tables = (select(IssuedBill)
-                   .join(IssuedBill.idborrow)
-                   .options(selectinload(IssuedBill.idborrow).selectinload(Borrows.idborrow))
-                   .where(IssuedBill.idborrow == id_borrow.identity)
-                   )
-    result = db.execute(join_tables)
-    bills = result.scalar_one_or_none()
+    stmt = (
+        select(IssuedBill)
+        .where(IssuedBill.idborrow == id_borrow.identity)
+        .options(selectinload(IssuedBill.idborrow))  # optional
+    )
+    result = db.execute(stmt)
+    bills = result.scalars().all()
     return bills
 
 
