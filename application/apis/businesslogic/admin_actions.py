@@ -43,7 +43,6 @@ def delete_admin_action(identify: IdentifierEntitySchema, db: Session):
             detail={"message": delete_admin_persistence(identify, db)}
         )
     except SQLAlchemyError as se:
-        print("Error: " + str(se))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"error": "Database failure", "info": str(se)}
