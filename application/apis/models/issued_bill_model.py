@@ -10,7 +10,7 @@ class IssuedBill(Base):
     idbill = Column(Integer, primary_key=True, index=True)
     duedate = Column(DateTime)
     amounttopay = Column(Float)
-    idplan = Column(Integer)
+    idborrow = Column(Integer)
 
     def __str__(self):
-        return f"Bill #{self.idbill}: Due {self.duedate}, Pay ${self.amounttopay}, Plan {self.idplan}"
+        return f"Bill #{self.idbill}: Due {self.duedate}, Pay ${self.amounttopay}, Plan {self.idborrow}"

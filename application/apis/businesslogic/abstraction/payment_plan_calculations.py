@@ -5,9 +5,9 @@ from dateutil.relativedelta import relativedelta
 from application.apis.models.issued_bill_model import IssuedBill
 
 
-def calculate_payment_plan(total: float, initial_times: list[int], aim_to_pay: list[float], generate_to_fill: bool,
-                           id_plan_origin: int,
-                           initial_date: datetime):
+def calculate_issued_bill(total: float, initial_times: list[int], aim_to_pay: list[float], generate_to_fill: bool,
+                          id_origin: int,
+                          initial_date: datetime):
     bill_issues = []
 
     ## CASE 1:  pay by full set of times
@@ -16,7 +16,7 @@ def calculate_payment_plan(total: float, initial_times: list[int], aim_to_pay: l
         bill_pay = round(total / bill_times, 2)
         for index in range(bill_times):
             bill_issues.append(IssuedBill(amounttopay=bill_pay, duedate=initial_date + relativedelta(months=index),
-                                          idplan=id_plan_origin))
+                                          idborrow=id_origin))
         return bill_issues
 
     ## CASE 2:  pay by stated initial Bill
@@ -25,12 +25,12 @@ def calculate_payment_plan(total: float, initial_times: list[int], aim_to_pay: l
         bill_set = int(total / agreed_amount)
         for i in range(bill_set):
             bill_issues.append(IssuedBill(amounttopay=agreed_amount, duedate=initial_date + relativedelta(months=i),
-                                          idplan=id_plan_origin))
+                                          idborrow=id_origin))
         final_payment = round(total - (agreed_amount * bill_set), 2)
         if final_payment > 0:
             bill_issues.append(
                 IssuedBill(amounttopay=final_payment, duedate=initial_date + relativedelta(months=bill_set),
-                           idplan=id_plan_origin))
+                           idborrow=id_origin))
         return bill_issues
 
     ##CASE 3 : Pay by appoint but with rightful intervention
@@ -47,18 +47,18 @@ def calculate_payment_plan(total: float, initial_times: list[int], aim_to_pay: l
                     pay_amount = round(total - total_paid, 2)
                     if pay_amount <= 0:
                         break
-                    bill_issues.append(IssuedBill(amounttopay=pay_amount, duedate=due, idplan=id_plan_origin))
+                    bill_issues.append(IssuedBill(amounttopay=pay_amount, duedate=due, idborrow=id_origin))
                     return bill_issues
-                bill_issues.append(IssuedBill(amounttopay=pay_amount, duedate=due, idplan=id_plan_origin))
+                bill_issues.append(IssuedBill(amounttopay=pay_amount, duedate=due, idborrow=id_origin))
                 total_paid += pay_amount
         return bill_issues
     return bill_issues
 
 
 if __name__ == "__main__":
-    first_case = calculate_payment_plan(1650, [5], [], False, 0, datetime.now(timezone.utc))
-    second_case = calculate_payment_plan(1968, [10], [100], True, 0, datetime.now(timezone.utc))
-    third_case = calculate_payment_plan(1968, [10, 3], [100, 516.67], False, 0, datetime.now(timezone.utc))
+    first_case = calculate_issued_bill(1650, [5], [], False, 0, datetime.now(timezone.utc))
+    second_case = calculate_issued_bill(1968, [10], [100], True, 0, datetime.now(timezone.utc))
+    third_case = calculate_issued_bill(1968, [10, 3], [100, 516.67], False, 0, datetime.now(timezone.utc))
     print("****************************************************************")
     for a, val in enumerate(first_case):
         print(first_case[a])

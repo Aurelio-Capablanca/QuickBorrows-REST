@@ -6,15 +6,12 @@ from sqlalchemy.orm import Session
 from starlette import status
 
 from application.apis.models.borrow_model import Borrows
-from application.apis.models.payment_plan_model import PaymentPlan
 from application.apis.schemas.borrow_schema import BorrowRequest
 from application.apis.schemas.id_schema import IdentifierEntitySchema
 from application.apis.schemas.pageable_schema import PageableSchema
 from application.apis.persistence.borrow_persistence import get_all_borrows_persistence, get_one_borrow_persistence, \
-    delete_borrow_persistence, save_borrow_persistence
-from application.apis.businesslogic.abstraction.payment_plan_calculations import calculate_payment_plan
-from application.database.session import engine
-from application.apis.persistence.payment_plan_persistence import save_payment_plan_persistence
+    delete_borrow_persistence, save_borrow_persistence, change_due_date_borrow_persistence
+from application.apis.businesslogic.abstraction.payment_plan_calculations import calculate_issued_bill
 from application.apis.persistence.issued_bill_persistence import create_issued_bills, delete_issued_bills
 
 
@@ -24,25 +21,20 @@ def save_borrow_actions(request: BorrowRequest, db: Session):
         bill_conditions = request.billconditions
         try:
             borrows = save_borrow_persistence(borrow, db)
-            borrow_entity = borrows["entity"]
             borrow_message = borrows["message"]
             is_update = borrows["isUpdate"]
             perform = borrows["perform"]
-            print("is about to perform ? ",perform)
-            plan = str
-            bill = str
+            print("is about to perform ? ", perform)
+            bill: str = ""
             if not is_update or perform:
-                plan = save_payment_plan_persistence(
-                    PaymentPlan(duedateplan=borrow_entity.duedate, idborrow=borrow_entity.idborrow), db)
-                plan_entity = plan["entity"]
                 if perform:
-                    delete_issued_bills(plan_entity.idplan, db)
-                bills = calculate_payment_plan(borrow_entity.totalpayment, bill_conditions.numpayments,
-                                               bill_conditions.paymentsof, bill_conditions.generatetofill,
-                                               plan_entity.idplan, borrow_entity.duedate)
+                    delete_issued_bills(borrow.idborrow, db)
+                bills = calculate_issued_bill(borrow.totalpayment, bill_conditions.numpayments,
+                                              bill_conditions.paymentsof, bill_conditions.generatetofill,
+                                              borrow.idborrow, borrow.datetaken)
                 bill = create_issued_bills(bills, db)
-            message = borrow_message, " And ", plan["message"], " And ", bill
-            #session.commit()
+                change_due_date_borrow_persistence(bills[len(bills) - 1].duedate, borrow, db)
+            message = borrow_message, " And ", bill
             db.commit()
             return HTTPException(
                 status_code=status.HTTP_200_OK,

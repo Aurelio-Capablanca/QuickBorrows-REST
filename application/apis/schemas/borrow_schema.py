@@ -14,10 +14,10 @@ class BorrowSchema(BaseModel):
     borrowamount: float
     percentagetax: Optional[float] = None
     datetaken: Optional[datetime] = None
-    duedate: datetime
     idmethod: int
     idclient: int
     idfound: int
+    isactive:bool
 
 
 class BorrowRequest(BaseModel):

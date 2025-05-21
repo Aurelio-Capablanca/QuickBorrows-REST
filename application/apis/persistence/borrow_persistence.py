@@ -11,18 +11,18 @@ from application.apis.schemas.pageable_schema import PageableSchema
 def save_borrow_persistence(borrow: Borrows, db: Session):
     if borrow.idborrow is None:
         borrow.datetaken = datetime.now(timezone.utc)
+        print(borrow.percentagetax)
         if borrow.percentagetax is None:
             borrow.percentagetax = 10.0
-            borrow.totalpayment = borrow.borrowamount + ((borrow.borrowamount * borrow.percentagetax) / 100)
+        borrow.totalpayment = borrow.borrowamount + ((borrow.borrowamount * borrow.percentagetax) / 100)
         db.add(borrow)
-        # db.commit()
         try:
             db.flush()
             db.refresh(borrow)
         except SQLAlchemyError as e:
             db.rollback()
             raise Exception("Database error during borrow creation: " + str(e))
-        return {"entity": borrow, "isUpdate": False, "perform": False, "message": "Borrow Created"}
+        return {"isUpdate": False, "perform": False, "message": "Borrow Created"}
     borrow_get = (db.query(Borrows).filter(Borrows.idborrow == borrow.idborrow).first())
     if not borrow_get:
         raise ValueError("Borrow Not found")
@@ -34,6 +34,7 @@ def save_borrow_persistence(borrow: Borrows, db: Session):
         perform_other_actions = False
         borrow.totalpayment = borrow_get.totalpayment
     borrow.datetaken = borrow_get.datetaken
+    borrow.duedate = borrow_get.duedate
     merge = borrow
     try:
         db.merge(merge)
@@ -41,7 +42,17 @@ def save_borrow_persistence(borrow: Borrows, db: Session):
     except SQLAlchemyError as e:
         db.rollback()
         raise Exception("Database error during borrow update: " + str(e))
-    return {"entity": merge, "isUpdate": True, "perform": perform_other_actions, "message": "Borrow Updated"}
+    return {"isUpdate": True, "perform": perform_other_actions, "message": "Borrow Updated"}
+
+
+def change_due_date_borrow_persistence(due_date: datetime, borrow: Borrows, db: Session):
+    borrow.duedate = due_date
+    try:
+        db.merge(borrow)
+        db.flush()
+    except SQLAlchemyError as e:
+        db.rollback()
+        raise Exception("Database error during borrow update due date: " + str(e))
 
 
 def get_all_borrows_persistence(page: PageableSchema, db: Session):

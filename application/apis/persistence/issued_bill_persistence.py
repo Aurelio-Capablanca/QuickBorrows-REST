@@ -2,7 +2,7 @@ from sqlalchemy import select, delete
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, selectinload
 
-from application.apis.models.payment_plan_model import PaymentPlan
+from application.apis.models.borrow_model import Borrows
 from application.apis.models.issued_bill_model import IssuedBill
 from application.apis.schemas.id_schema import IdentifierEntitySchema
 
@@ -22,18 +22,17 @@ def create_issued_bills(bills: list[IssuedBill], db: Session):
 
 def get_all_bills_by_borrow_(id_borrow: IdentifierEntitySchema, db: Session):
     join_tables = (select(IssuedBill)
-                   .join(IssuedBill.idplan)
-                   .join(PaymentPlan.idborrow)
-                   .options(selectinload(IssuedBill.idplan).selectinload(PaymentPlan.idborrow))
-                   .where(PaymentPlan.idborrow == id_borrow.identity)
+                   .join(IssuedBill.idborrow)
+                   .options(selectinload(IssuedBill.idborrow).selectinload(Borrows.idborrow))
+                   .where(IssuedBill.idborrow == id_borrow.identity)
                    )
     result = db.execute(join_tables)
     bills = result.scalar_one_or_none()
     return bills
 
 
-def delete_issued_bills(id_plan: int, db: Session):
-    statement = delete(IssuedBill).where(IssuedBill.idplan == id_plan)
+def delete_issued_bills(id_borrow: int, db: Session):
+    statement = delete(IssuedBill).where(IssuedBill.idborrow == id_borrow)
     try:
         db.execute(statement)
         db.flush()
