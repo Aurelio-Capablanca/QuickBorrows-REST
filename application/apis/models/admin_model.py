@@ -14,3 +14,6 @@ class Administrators(Base):
     adminphone = Column(String)
     adminstatus = Column(Boolean)
     datecreated = Column(DateTime)
+
+    def __str__(self):
+        return f"ID #{self.idadministrator}: Name {self.adminname}, Last Name ${self.adminlastname}, Email {self.adminemail}, Status {self.adminstatus}"
