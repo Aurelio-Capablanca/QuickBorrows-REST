@@ -33,6 +33,8 @@ def save_borrow_persistence(borrow: Borrows, db: Session):
     else:
         perform_other_actions = False
         borrow.totalpayment = borrow_get.totalpayment
+    if borrow.percentagetax is None:
+        borrow.percentagetax = 10.0
     borrow.datetaken = borrow_get.datetaken
     borrow.duedate = borrow_get.duedate
     merge = borrow
